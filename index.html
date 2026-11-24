@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KBO FA 적정 계약금 산출기 (사전적 샐러리캡 모델)</title>
+  <title>KBO FA 적정 계약금 산출기 (2027 공식 22명 · 스탯티즈 WAR 기준)</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -15,6 +15,7 @@
       --accent: #38bdf8;
       --accent-2: #22c55e;
       --warn: #f59e0b;
+      --rose: #fb7185;
     }
     * { box-sizing: border-box; }
     body {
@@ -25,7 +26,7 @@
       line-height: 1.5;
     }
     .wrap {
-      max-width: 1120px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px 16px 48px;
     }
@@ -42,15 +43,15 @@
     }
     .sub {
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       margin: 0;
     }
     .grid {
       display: grid;
-      grid-template-columns: 1.05fr 1fr;
+      grid-template-columns: 1.05fr 1.05fr;
       gap: 18px;
     }
-    @media (max-width: 860px) {
+    @media (max-width: 900px) {
       .grid { grid-template-columns: 1fr; }
     }
     .card {
@@ -62,7 +63,7 @@
     }
     .card h2 {
       margin: 0 0 14px;
-      font-size: 1.08rem;
+      font-size: 1.06rem;
       border-bottom: 1px solid var(--line);
       padding-bottom: 8px;
     }
@@ -72,12 +73,18 @@
       gap: 12px;
       margin-bottom: 12px;
     }
+    .row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
     @media (max-width: 560px) {
-      .row { grid-template-columns: 1fr; }
+      .row, .row-3 { grid-template-columns: 1fr; }
     }
     label {
       display: block;
-      font-size: 0.84rem;
+      font-size: 0.81rem;
       color: var(--muted);
       margin-bottom: 4px;
     }
@@ -88,7 +95,16 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 9px 10px;
-      font-size: 0.94rem;
+      font-size: 0.92rem;
+    }
+    .vol-badge {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.84rem;
+      color: var(--accent);
+      margin-bottom: 12px;
     }
     .kpi-grid {
       display: grid;
@@ -107,36 +123,39 @@
       color: var(--muted);
     }
     .kpi .k-val {
-      font-size: 1.32rem;
+      font-size: 1.24rem;
       font-weight: 700;
       color: var(--accent);
       margin-top: 2px;
     }
     .kpi.green .k-val { color: var(--accent-2); }
     .kpi.warn .k-val { color: var(--warn); }
+    .kpi.rose .k-val { color: var(--rose); }
     .breakdown {
       background: var(--panel-2);
       border: 1px solid var(--line);
       border-radius: 10px;
       padding: 12px 14px;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
     }
     .breakdown div {
       display: flex;
       justify-content: space-between;
-      padding: 4px 0;
+      gap: 10px;
+      padding: 5px 0;
       border-bottom: 1px dashed rgba(148, 163, 184, 0.18);
     }
     .breakdown div:last-child { border-bottom: 0; }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.84rem;
+      font-size: 0.8rem;
     }
     th, td {
-      padding: 8px 6px;
+      padding: 7px 5px;
       border-bottom: 1px solid var(--line);
       text-align: left;
+      white-space: nowrap;
     }
     th { color: var(--muted); font-weight: 600; }
     tr.clickable { cursor: pointer; }
@@ -145,7 +164,7 @@
       display: inline-block;
       padding: 2px 7px;
       border-radius: 999px;
-      font-size: 0.75rem;
+      font-size: 0.73rem;
       background: rgba(56, 189, 248, 0.15);
       color: var(--accent);
     }
@@ -169,14 +188,14 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>KBO FA 적정 계약금 산출기 (2027 공식 22명 기준)</h1>
-      <p class="sub">사전적(Ex-ante) 샐러리캡 1 WAR 단가: (전년도 샐러리캡 상한액 - 8.4억) ÷ 32</p>
+      <h1>KBO FA 적정 계약금 산출기 (2027 공식 22명 · 스탯티즈 2024~2026 WAR)</h1>
+      <p class="sub">사전적(Ex-ante) 샐러리캡 1 WAR 단가: (전년도 샐러리캡 상한액 - 8.4억) ÷ 32 · 타자는 타석(PA), 투수는 야구식 이닝(.1=⅓, .2=⅔) 반영</p>
     </header>
 
     <div class="grid">
       <div>
         <div class="card">
-          <h2>1. 선수 선택 및 기본 조건</h2>
+          <h2>1. 선수 선택 및 스탯티즈 연도별 WAR (2024·2025·2026)</h2>
           <div class="row">
             <div>
               <label for="gradeFilter">FA 등급 필터</label>
@@ -193,10 +212,27 @@
             </div>
           </div>
 
+          <div class="row-3">
+            <div>
+              <label for="war2024" id="lbl24">2024년 WAR</label>
+              <input type="number" id="war2024" step="0.01" />
+            </div>
+            <div>
+              <label for="war2025" id="lbl25">2025년 WAR</label>
+              <input type="number" id="war2025" step="0.01" />
+            </div>
+            <div>
+              <label for="war2026" id="lbl26">2026년 WAR</label>
+              <input type="number" id="war2026" step="0.01" />
+            </div>
+          </div>
+
+          <div class="vol-badge" id="volSummary">-</div>
+
           <div class="row">
             <div>
-              <label for="salaryCap">전년도 샐러리캡 상한액 (억 원)</label>
-              <input type="number" id="salaryCap" step="0.01" value="143.97" />
+              <label for="warAvg">3년 평균 WAR (스탯티즈 기준)</label>
+              <input type="number" id="warAvg" step="0.01" readonly />
             </div>
             <div>
               <label for="roleType">직군 (단가 배수)</label>
@@ -210,8 +246,8 @@
 
           <div class="row">
             <div>
-              <label for="warAvg">직전 3개년 평균 WAR</label>
-              <input type="number" id="warAvg" step="0.05" />
+              <label for="salaryCap">전년도 샐러리캡 상한액 (억 원)</label>
+              <input type="number" id="salaryCap" step="0.01" value="143.97" />
             </div>
             <div>
               <label for="ageBand">나이 계수 구간 (K_age)</label>
@@ -227,7 +263,7 @@
         </div>
 
         <div class="card">
-          <h2>2. 계약 기간·쟁탈 및 보너스 조정</h2>
+          <h2>2. 계약 기간·쟁탈·보너스 및 등급 보상</h2>
           <div class="row">
             <div>
               <label for="contractYears">계약 기간 (년)</label>
@@ -247,12 +283,23 @@
 
           <div class="row">
             <div>
-              <label for="workVolume">최근 3년 평균 출장 경기 / 이닝</label>
-              <input type="number" id="workVolume" step="1" />
+              <label for="workVolume" id="volInputLabel">3년 평균 타석 / 이닝</label>
+              <input type="number" id="workVolume" step="0.1" />
             </div>
             <div>
               <label for="posBonusSelect">3. 포지션·보직 및 내구성 보너스 (억 원)</label>
               <select id="posBonusSelect"></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="prevSalary">직전 연봉 (억 원 · 등급 보상 산정용)</label>
+              <input type="number" id="prevSalary" step="0.1" min="0" value="3.0" />
+            </div>
+            <div>
+              <label for="compPlayerVal">타 구단 영입 시 보상선수 가치 환산 (억 원)</label>
+              <input type="number" id="compPlayerVal" step="0.1" min="0" value="2.5" />
             </div>
           </div>
           <p class="sub" id="durHint"></p>
@@ -261,23 +308,23 @@
 
       <div>
         <div class="card">
-          <h2>적정 계약금 산출 결과</h2>
+          <h2>적정 계약금 및 등급별 영입 비용</h2>
           <div class="kpi-grid">
             <div class="kpi green">
               <div class="k-label">연평균 예상 금액 (AAV)</div>
               <div class="k-val" id="aavOut">-</div>
             </div>
             <div class="kpi">
-              <div class="k-label">선택 기간 총액</div>
+              <div class="k-label">선택 기간 계약 총액</div>
               <div class="k-val" id="totalOut">-</div>
+            </div>
+            <div class="kpi rose">
+              <div class="k-label">타 구단 영입 시 실제 총 부담 (계약+보상)</div>
+              <div class="k-val" id="rivalCostOut">-</div>
             </div>
             <div class="kpi warn">
               <div class="k-label">4+2년 옵션 구조 비교 (4년 보장 + 2년 옵션)</div>
               <div class="k-val" id="opt42Out">-</div>
-            </div>
-            <div class="kpi">
-              <div class="k-label">사전적 1 WAR 기준가</div>
-              <div class="k-val" id="baseWarOut">-</div>
             </div>
           </div>
 
@@ -285,16 +332,19 @@
         </div>
 
         <div class="card">
-          <h2>2027 KBO FA 승인 22명 요약 (클릭 시 선택)</h2>
-          <div style="max-height: 290px; overflow:auto;">
+          <h2>2027 KBO FA 승인 22명 스탯티즈 WAR 표 (클릭 시 선택)</h2>
+          <div style="max-height: 320px; overflow:auto;">
             <table>
               <thead>
                 <tr>
-                  <th>선수</th>
-                  <th>구단</th>
                   <th>등급</th>
-                  <th>직군</th>
-                  <th>3년 WAR</th>
+                  <th>선수</th>
+                  <th>소속</th>
+                  <th>구분</th>
+                  <th>2024</th>
+                  <th>2025</th>
+                  <th>2026</th>
+                  <th>3년평균</th>
                 </tr>
               </thead>
               <tbody id="rosterBody"></tbody>
@@ -314,50 +364,88 @@
   </div>
 
   <script>
+    // v24, v25, v26: 타자는 타석(PA), 투수는 야구식 이닝(159.2 = 159와 2/3이닝)
     const PLAYERS = [
       // A등급 (6명)
-      { name: "구자욱", team: "삼성", grade: "A", role: "BATTER", war: 4.55, age: 33, ageK: 0.97, vol: 132, prem: 20, pos: "코너/지명 핵심", baseBonus: 2.5 },
-      { name: "원태인", team: "삼성", grade: "A", role: "STARTER", war: 4.20, age: 26, ageK: 1.16, vol: 162, prem: 18, pos: "토종 에이스", baseBonus: 3.5 },
-      { name: "홍창기", team: "LG", grade: "A", role: "BATTER", war: 4.10, age: 33, ageK: 0.97, vol: 136, prem: 12, pos: "출루형 주전 외야", baseBonus: 2.0 },
-      { name: "김민혁", team: "KT", grade: "A", role: "BATTER", war: 2.35, age: 31, ageK: 1.05, vol: 124, prem: 5, pos: "주전 외야", baseBonus: 1.2 },
-      { name: "배정대", team: "KT", grade: "A", role: "BATTER", war: 2.45, age: 31, ageK: 1.05, vol: 128, prem: 5, pos: "수비형 중견수", baseBonus: 2.0 },
-      { name: "박상원", team: "한화", grade: "A", role: "RELIEVER", war: 1.55, age: 32, ageK: 1.05, vol: 66, prem: 5, pos: "핵심 불펜/마무리", baseBonus: 1.5 },
+      { name: "구자욱", team: "삼성", grade: "A", role: "BATTER", y24: 5.88, v24: 568, y25: 4.48, v25: 616, y26: 5.60, v26: 497, age: 33, ageK: 0.97, prem: 20, pos: "코너/지명 핵심", baseBonus: 2.5, sal: 8.0 },
+      { name: "원태인", team: "삼성", grade: "A", role: "STARTER", y24: 5.22, v24: 159.2, y25: 4.91, v25: 166.2, y26: 3.36, v26: 145.1, age: 26, ageK: 1.16, prem: 18, pos: "토종 에이스", baseBonus: 3.5, sal: 6.3 },
+      { name: "홍창기", team: "LG", grade: "A", role: "BATTER", y24: 5.23, v24: 637, y25: 0.99, v25: 215, y26: 1.47, v26: 518, age: 33, ageK: 0.97, prem: 12, pos: "출루형 주전 외야", baseBonus: 2.0, sal: 5.1 },
+      { name: "김민혁", team: "KT", grade: "A", role: "BATTER", y24: 2.27, v24: 393, y25: -0.15, v25: 417, y26: -0.10, v26: 420, age: 31, ageK: 1.05, prem: 5, pos: "주전 외야", baseBonus: 1.2, sal: 2.7 },
+      { name: "배정대", team: "KT", grade: "A", role: "BATTER", y24: 0.91, v24: 473, y25: -0.03, v25: 276, y26: 0.13, v26: 129, age: 31, ageK: 1.05, prem: 5, pos: "수비형 중견수", baseBonus: 2.0, sal: 2.6 },
+      { name: "박상원", team: "한화", grade: "A", role: "RELIEVER", y24: 0.91, v24: 66.2, y25: 0.73, v25: 66.2, y26: 0.69, v26: 50.2, age: 32, ageK: 1.05, prem: 5, pos: "핵심 불펜/마무리", baseBonus: 1.5, sal: 2.5 },
 
       // B등급 (10명)
-      { name: "최지훈", team: "SSG", grade: "B", role: "BATTER", war: 2.85, age: 29, ageK: 1.10, vol: 134, prem: 6, pos: "수비 중심 중견수", baseBonus: 2.0 },
-      { name: "박동원", team: "LG", grade: "B", role: "BATTER", war: 3.10, age: 36, ageK: 0.87, vol: 126, prem: 8, pos: "주전 포수", baseBonus: 2.5 },
-      { name: "정수빈", team: "두산", grade: "B", role: "BATTER", war: 2.40, age: 36, ageK: 0.87, vol: 131, prem: 10, pos: "중견수/프랜차이즈", baseBonus: 2.0 },
-      { name: "박치국", team: "두산", grade: "B", role: "RELIEVER", war: 1.25, age: 28, ageK: 1.16, vol: 62, prem: 4, pos: "필승조 불펜", baseBonus: 1.2 },
-      { name: "한승혁", team: "한화", grade: "B", role: "RELIEVER", war: 1.10, age: 33, ageK: 0.97, vol: 58, prem: 2, pos: "중간/필승 불펜", baseBonus: 1.0 },
-      { name: "김민수", team: "KT", grade: "B", role: "RELIEVER", war: 1.05, age: 34, ageK: 0.97, vol: 56, prem: 2, pos: "중간 불펜", baseBonus: 1.0 },
-      { name: "최재훈", team: "한화", grade: "B", role: "BATTER", war: 1.95, age: 37, ageK: 0.87, vol: 112, prem: 6, pos: "주전 포수", baseBonus: 2.2 },
-      { name: "권희동", team: "NC", grade: "B", role: "BATTER", war: 1.65, age: 36, ageK: 0.87, vol: 115, prem: 2, pos: "코너 외야/지명", baseBonus: 1.0 },
-      { name: "김태군", team: "KIA", grade: "B", role: "BATTER", war: 1.50, age: 37, ageK: 0.87, vol: 108, prem: 3, pos: "백업/선발 포수", baseBonus: 1.8 },
-      { name: "오윤석", team: "롯데", grade: "B", role: "BATTER", war: 1.15, age: 34, ageK: 0.97, vol: 98, prem: 0, pos: "내야 유틸리티", baseBonus: 1.2 },
+      { name: "최지훈", team: "SSG", grade: "B", role: "BATTER", y24: 1.82, v24: 543, y25: 2.30, v25: 574, y26: 1.51, v26: 578, age: 29, ageK: 1.10, prem: 8, pos: "수비 중심 중견수", baseBonus: 2.2, sal: 4.0 },
+      { name: "박동원", team: "LG", grade: "B", role: "BATTER", y24: 4.54, v24: 498, y25: 5.12, v25: 523, y26: 2.37, v26: 420, age: 36, ageK: 0.87, prem: 8, pos: "주전 포수", baseBonus: 2.5, sal: 15.0 },
+      { name: "정수빈", team: "두산", grade: "B", role: "BATTER", y24: 3.07, v24: 608, y25: 2.83, v25: 546, y26: 1.95, v26: 536, age: 36, ageK: 0.87, prem: 10, pos: "중견수/프랜차이즈", baseBonus: 2.0, sal: 6.0 },
+      { name: "박치국", team: "두산", grade: "B", role: "RELIEVER", y24: -0.06, v24: 48, y25: 0.22, v25: 62.1, y26: -0.32, v26: 48.1, age: 28, ageK: 1.16, prem: 4, pos: "필승조 불펜", baseBonus: 1.2, sal: 2.2 },
+      { name: "한승혁", team: "KT", grade: "B", role: "RELIEVER", y24: 0.76, v24: 62.2, y25: 2.54, v25: 64, y26: -0.12, v26: 32.1, age: 33, ageK: 0.97, prem: 2, pos: "중간/필승 불펜", baseBonus: 1.0, sal: 2.0 },
+      { name: "김민수", team: "KT", grade: "B", role: "RELIEVER", y24: 0.50, v24: 81.1, y25: 0.43, v25: 52.2, y26: -0.33, v26: 42.2, age: 34, ageK: 0.97, prem: 2, pos: "중간 불펜", baseBonus: 1.0, sal: 1.8 },
+      { name: "최재훈", team: "한화", grade: "B", role: "BATTER", y24: 1.88, v24: 348, y25: 3.23, v25: 348, y26: -0.70, v26: 122, age: 37, ageK: 0.87, prem: 6, pos: "주전 포수", baseBonus: 2.2, sal: 5.0 },
+      { name: "권희동", team: "NC", grade: "B", role: "BATTER", y24: 3.89, v24: 511, y25: 2.76, v25: 456, y26: -0.06, v26: 298, age: 36, ageK: 0.87, prem: 2, pos: "코너 외야/지명", baseBonus: 1.0, sal: 2.2 },
+      { name: "김태군", team: "KIA", grade: "B", role: "BATTER", y24: 1.16, v24: 270, y25: 1.77, v25: 274, y26: 1.19, v26: 249, age: 37, ageK: 0.87, prem: 3, pos: "백업/선발 포수", baseBonus: 1.8, sal: 2.5 },
+      { name: "오윤석", team: "KT", grade: "B", role: "BATTER", y24: 1.57, v24: 201, y25: 0.66, v25: 184, y26: -0.16, v26: 215, age: 34, ageK: 0.97, prem: 0, pos: "내야 유틸리티", baseBonus: 1.2, sal: 1.6 },
 
       // C등급 (6명)
-      { name: "양의지", team: "두산", grade: "C", role: "BATTER", war: 4.15, age: 39, ageK: 0.87, vol: 122, prem: 12, pos: "최상급 포수", baseBonus: 2.8 },
-      { name: "문승원", team: "SSG", grade: "C", role: "STARTER", war: 1.80, age: 37, ageK: 0.87, vol: 125, prem: 4, pos: "선발/롱릴리프", baseBonus: 1.5 },
-      { name: "김호령", team: "KIA", grade: "C", role: "BATTER", war: 1.20, age: 34, ageK: 0.97, vol: 95, prem: 0, pos: "수비형 외야", baseBonus: 1.3 },
-      { name: "김상수", team: "KT", grade: "C", role: "BATTER", war: 1.30, age: 36, ageK: 0.87, vol: 105, prem: 2, pos: "내야 베테랑", baseBonus: 1.4 },
-      { name: "오태곤", team: "SSG", grade: "C", role: "BATTER", war: 1.00, age: 35, ageK: 0.87, vol: 92, prem: 0, pos: "내야/외야 멀티", baseBonus: 1.0 },
-      { name: "전병우", team: "KIA", grade: "C", role: "BATTER", war: 0.85, age: 34, ageK: 0.97, vol: 84, prem: 0, pos: "내야 멀티", baseBonus: 0.9 }
+      { name: "양의지", team: "두산", grade: "C", role: "BATTER", y24: 3.31, v24: 485, y25: 6.79, v25: 517, y26: 3.09, v26: 537, age: 39, ageK: 0.87, prem: 12, pos: "최상급 포수", baseBonus: 2.8, sal: 20.0 },
+      { name: "문승원", team: "SSG", grade: "C", role: "STARTER", y24: 0.91, v24: 60, y25: 1.51, v25: 105.1, y26: 1.50, v26: 62.2, age: 37, ageK: 0.87, prem: 4, pos: "선발/롱릴리프", baseBonus: 1.5, sal: 8.0 },
+      { name: "김호령", team: "KIA", grade: "C", role: "BATTER", y24: -0.21, v24: 67, y25: 2.82, v25: 381, y26: 1.90, v26: 581, age: 34, ageK: 0.97, prem: 0, pos: "수비형 외야", baseBonus: 1.3, sal: 1.5 },
+      { name: "김상수", team: "KT", grade: "C", role: "BATTER", y24: 1.95, v24: 420, y25: 1.17, v25: 423, y26: 1.84, v26: 489, age: 36, ageK: 0.87, prem: 2, pos: "내야 베테랑", baseBonus: 1.4, sal: 2.4 },
+      { name: "오태곤", team: "SSG", grade: "C", role: "BATTER", y24: 1.33, v24: 288, y25: -0.36, v25: 229, y26: 0.01, v26: 269, age: 35, ageK: 0.87, prem: 0, pos: "내야/외야 멀티", baseBonus: 1.0, sal: 1.5 },
+      { name: "전병우", team: "삼성", grade: "C", role: "BATTER", y24: 0.31, v24: 128, y25: 0.55, v25: 97, y26: 1.37, v26: 409, age: 34, ageK: 0.97, prem: 0, pos: "내야 멀티", baseBonus: 0.9, sal: 1.3 }
     ];
 
     const ROLE_MULT = { BATTER: 1.00, STARTER: 1.15, RELIEVER: 1.22 };
-    const ROLE_LABEL = { BATTER: "야수", STARTER: "선발 투수", RELIEVER: "불펜 투수" };
+    const ROLE_LABEL = { BATTER: "야수", STARTER: "선발", RELIEVER: "불펜" };
 
     const gradeFilter = document.getElementById("gradeFilter");
     const playerSelect = document.getElementById("playerSelect");
+    const war2024 = document.getElementById("war2024");
+    const war2025 = document.getElementById("war2025");
+    const war2026 = document.getElementById("war2026");
+    const warAvg = document.getElementById("warAvg");
     const salaryCap = document.getElementById("salaryCap");
     const roleType = document.getElementById("roleType");
-    const warAvg = document.getElementById("warAvg");
     const ageBand = document.getElementById("ageBand");
     const contractYears = document.getElementById("contractYears");
     const premiumRate = document.getElementById("premiumRate");
     const workVolume = document.getElementById("workVolume");
     const posBonusSelect = document.getElementById("posBonusSelect");
+    const prevSalary = document.getElementById("prevSalary");
+    const compPlayerVal = document.getElementById("compPlayerVal");
     const durHint = document.getElementById("durHint");
+
+    // 야구식 이닝(159.2 -> 159 + 2/3)을 실제 이닝 실수로 변환
+    function baseballIpToReal(ip) {
+      const whole = Math.floor(ip);
+      const frac = Math.round((ip - whole) * 10);
+      if (frac === 1) return whole + 1 / 3;
+      if (frac === 2) return whole + 2 / 3;
+      return ip;
+    }
+
+    // 실제 이닝 실수를 야구식 표기로 변환
+    function realIpToBaseball(realIp) {
+      const whole = Math.floor(realIp + 1e-6);
+      const rem = realIp - whole;
+      const outs = Math.round(rem * 3);
+      if (outs === 3) return `${whole + 1}`;
+      if (outs === 1) return `${whole}.1`;
+      if (outs === 2) return `${whole}.2`;
+      return `${whole}`;
+    }
+
+    function getThreeYearAvgWar(p) {
+      return (p.y24 + p.y25 + p.y26) / 3;
+    }
+
+    function getThreeYearAvgVol(p) {
+      if (p.role === "BATTER") {
+        return Math.round((p.v24 + p.v25 + p.v26) / 3);
+      }
+      const realAvg = (baseballIpToReal(p.v24) + baseballIpToReal(p.v25) + baseballIpToReal(p.v26)) / 3;
+      return parseFloat(realAvg.toFixed(1));
+    }
 
     function calcDurabilityBonus(role, vol) {
       if (role === "STARTER") {
@@ -370,7 +458,35 @@
         if (vol >= 45) return 0.6;
         return 0.2;
       }
-      return vol >= 130 ? 1.0 : vol >= 100 ? 0.5 : 0.0;
+      // 야수 3년 평균 타석 기준 (450타석↑ +1.0억 / 300~449타석 +0.5억)
+      return vol >= 450 ? 1.0 : vol >= 300 ? 0.5 : 0.0;
+    }
+
+    function calcGradeCompensation(grade, sal, compVal) {
+      const s = Math.max(0, parseFloat(sal) || 0);
+      const c = Math.max(0, parseFloat(compVal) || 0);
+      if (grade === "A") {
+        return {
+          cashComp: s * 2.0,
+          playerComp: c,
+          totalComp: s * 2.0 + c,
+          desc: "A등급: 보상선수 1명(20인 외) + 전년도 연봉 200%"
+        };
+      }
+      if (grade === "B") {
+        return {
+          cashComp: s * 1.0,
+          playerComp: c,
+          totalComp: s * 1.0 + c,
+          desc: "B등급: 보상선수 1명(25인 외) + 전년도 연봉 100%"
+        };
+      }
+      return {
+        cashComp: s * 1.5,
+        playerComp: 0,
+        totalComp: s * 1.5,
+        desc: "C등급: 보상선수 없음 + 전년도 연봉 150%"
+      };
     }
 
     function rebuildBonusOptions(player, currentRole, currentVol, preferredVal = null) {
@@ -390,11 +506,11 @@
       }
 
       if (currentRole === "STARTER") {
-        durHint.textContent = `선발 이닝 기준: 150이닝↑ +2.5억 / 130~149이닝 +1.5억 (현재 ${currentVol}이닝 → +${dur.toFixed(1)}억)`;
+        durHint.textContent = `선발 이닝 기준: 150이닝↑ +2.5억 / 130~149이닝 +1.5억 (3년 평균 ${currentVol}이닝 → +${dur.toFixed(1)}억)`;
       } else if (currentRole === "RELIEVER") {
-        durHint.textContent = `불펜 이닝 기준: 60이닝↑ +1.2억 / 45~59이닝 +0.6억 (현재 ${currentVol}이닝 → +${dur.toFixed(1)}억)`;
+        durHint.textContent = `불펜 이닝 기준: 60이닝↑ +1.2억 / 45~59이닝 +0.6억 (3년 평균 ${currentVol}이닝 → +${dur.toFixed(1)}억)`;
       } else {
-        durHint.textContent = `야수 출장 기준: 130경기↑ +1.0억 / 100~129경기 +0.5억 (현재 ${currentVol}경기 → +${dur.toFixed(1)}억)`;
+        durHint.textContent = `야수 타석 기준: 450타석↑ +1.0억 / 300~449타석 +0.5억 (3년 평균 ${currentVol}타석 → +${dur.toFixed(1)}억)`;
       }
     }
 
@@ -411,57 +527,92 @@
 
     function applySelectedPlayer() {
       const p = PLAYERS.find(x => x.name === playerSelect.value) || PLAYERS[0];
+      const unit = p.role === "BATTER" ? "타석" : "이닝";
+      document.getElementById("lbl24").textContent = `2024년 WAR (${p.v24}${unit})`;
+      document.getElementById("lbl25").textContent = `2025년 WAR (${p.v25}${unit})`;
+      document.getElementById("lbl26").textContent = `2026년 WAR (${p.v26}${unit})`;
+
+      const avgVol = getThreeYearAvgVol(p);
+      if (p.role === "BATTER") {
+        document.getElementById("volSummary").textContent = `연도별 타석: 2024년 ${p.v24}타석 · 2025년 ${p.v25}타석 · 2026년 ${p.v26}타석 (3년 평균 ${avgVol}타석)`;
+        document.getElementById("volInputLabel").textContent = "3년 평균 타석 (PA)";
+      } else {
+        const realAvg = (baseballIpToReal(p.v24) + baseballIpToReal(p.v25) + baseballIpToReal(p.v26)) / 3;
+        document.getElementById("volSummary").textContent = `연도별 이닝: 2024년 ${p.v24}이닝 · 2025년 ${p.v25}이닝 · 2026년 ${p.v26}이닝 (3년 평균 ${realIpToBaseball(realAvg)}이닝 / 환산 ${avgVol}이닝)`;
+        document.getElementById("volInputLabel").textContent = "3년 평균 환산 이닝 (IP)";
+      }
+
+      war2024.value = p.y24.toFixed(2);
+      war2025.value = p.y25.toFixed(2);
+      war2026.value = p.y26.toFixed(2);
       roleType.value = p.role;
-      warAvg.value = p.war.toFixed(2);
       ageBand.value = p.ageK.toFixed(2);
-      workVolume.value = p.vol;
+      workVolume.value = avgVol;
       premiumRate.value = p.prem;
-      rebuildBonusOptions(p, p.role, p.vol);
+      prevSalary.value = p.sal.toFixed(1);
+      rebuildBonusOptions(p, p.role, avgVol);
       calculate();
     }
 
     function calculate() {
       const p = PLAYERS.find(x => x.name === playerSelect.value) || PLAYERS[0];
+      const w24 = parseFloat(war2024.value) || 0;
+      const w25 = parseFloat(war2025.value) || 0;
+      const w26 = parseFloat(war2026.value) || 0;
+      const avgWar = (w24 + w25 + w26) / 3;
+      warAvg.value = avgWar.toFixed(2);
+
       const cap = parseFloat(salaryCap.value) || 143.97;
       const baseWar = Math.max(0.5, (cap - 8.4) / 32);
       const role = roleType.value;
       const roleMult = ROLE_MULT[role] || 1.0;
-      const war = Math.max(0, parseFloat(warAvg.value) || 0);
       const ageK = parseFloat(ageBand.value) || 1.0;
       const bonus = parseFloat(posBonusSelect.value) || 0;
       const prem = (parseFloat(premiumRate.value) || 0) / 100;
       const years = parseInt(contractYears.value, 10) || 4;
 
-      const rawAnnual = (war * baseWar * roleMult + bonus) * ageK * (1 + prem);
+      const rawAnnual = (avgWar * baseWar * roleMult + bonus) * ageK * (1 + prem);
       const aav = Math.max(1.0, rawAnnual);
       const total = aav * years;
       const opt42 = aav * 6;
 
-      document.getElementById("baseWarOut").textContent = `${baseWar.toFixed(2)}억 원`;
+      const comp = calcGradeCompensation(p.grade, prevSalary.value, compPlayerVal.value);
+      const rivalTotalCost = total + comp.totalComp;
+
       document.getElementById("aavOut").textContent = `${aav.toFixed(2)}억 원`;
       document.getElementById("totalOut").textContent = `${total.toFixed(1)}억 원 (${years}년)`;
+      document.getElementById("rivalCostOut").textContent = `${rivalTotalCost.toFixed(1)}억 원 (+${comp.totalComp.toFixed(1)}억)`;
       document.getElementById("opt42Out").textContent = `${(aav * 4).toFixed(1)}억 + ${(aav * 2).toFixed(1)}억 = ${opt42.toFixed(1)}억`;
 
+      const unit = p.role === "BATTER" ? "타석" : "이닝";
       document.getElementById("breakdownBox").innerHTML = `
-        <div><span>선택 선수</span><strong>${p.name} (${p.team} · ${p.grade}등급)</strong></div>
-        <div><span>직군 / WAR 배수</span><strong>${ROLE_LABEL[role]} (${roleMult.toFixed(2)}x)</strong></div>
-        <div><span>3년 평균 WAR × 1 WAR 단가</span><strong>${(war * baseWar).toFixed(2)}억 원</strong></div>
+        <div><span>선택 선수 / 등급</span><strong>${p.name} (${p.team} · ${p.grade}등급)</strong></div>
+        <div><span>스탯티즈 WAR (24/25/26)</span><strong>${w24.toFixed(2)}(${p.v24}) / ${w25.toFixed(2)}(${p.v25}) / ${w26.toFixed(2)}(${p.v26})</strong></div>
+        <div><span>3년 평균 WAR / 직군 배수</span><strong>${avgWar.toFixed(2)} · ${ROLE_LABEL[role]} (${roleMult.toFixed(2)}x)</strong></div>
+        <div><span>3년 평균 WAR × 1 WAR 단가(${baseWar.toFixed(2)}억)</span><strong>${(avgWar * baseWar).toFixed(2)}억 원</strong></div>
         <div><span>3. 포지션·보직 및 내구성 보너스</span><strong>+${bonus.toFixed(1)}억 원</strong></div>
         <div><span>나이 계수 (K_age) × 프리미엄</span><strong>${ageK.toFixed(2)} × ${(1 + prem).toFixed(2)}</strong></div>
+        <div><span>등급 영입 보상 부담 (${comp.desc})</span><strong>현금 ${comp.cashComp.toFixed(1)}억 + 선수환산 ${comp.playerComp.toFixed(1)}억 = ${comp.totalComp.toFixed(1)}억</strong></div>
       `;
     }
 
     function renderRoster() {
       const tbody = document.getElementById("rosterBody");
-      tbody.innerHTML = PLAYERS.map(p => `
-        <tr class="clickable" data-name="${p.name}">
-          <td><strong>${p.name}</strong></td>
-          <td>${p.team}</td>
-          <td><span class="pill">${p.grade}</span></td>
-          <td>${ROLE_LABEL[p.role]}</td>
-          <td>${p.war.toFixed(2)}</td>
-        </tr>
-      `).join("");
+      tbody.innerHTML = PLAYERS.map(p => {
+        const avg = getThreeYearAvgWar(p);
+        return `
+          <tr class="clickable" data-name="${p.name}">
+            <td><span class="pill">${p.grade}</span></td>
+            <td><strong>${p.name}</strong></td>
+            <td>${p.team}</td>
+            <td>${ROLE_LABEL[p.role]}</td>
+            <td>${p.y24.toFixed(2)} (${p.v24})</td>
+            <td>${p.y25.toFixed(2)} (${p.v25})</td>
+            <td>${p.y26.toFixed(2)} (${p.v26})</td>
+            <td><strong>${avg.toFixed(2)}</strong></td>
+          </tr>
+        `;
+      }).join("");
 
       tbody.querySelectorAll("tr").forEach(tr => {
         tr.addEventListener("click", () => {
@@ -480,7 +631,7 @@
 
     gradeFilter.addEventListener("change", () => populatePlayers(false));
     playerSelect.addEventListener("change", applySelectedPlayer);
-    [salaryCap, warAvg, ageBand, contractYears, premiumRate].forEach(el => {
+    [war2024, war2025, war2026, salaryCap, ageBand, contractYears, premiumRate, prevSalary, compPlayerVal].forEach(el => {
       el.addEventListener("input", calculate);
       el.addEventListener("change", calculate);
     });
@@ -503,3 +654,4 @@
   </script>
 </body>
 </html>
+
